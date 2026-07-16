@@ -82,16 +82,23 @@ def main():
             print(f'{full_set_string} => {decs_visa.query(full_set_string)}')
             # NB - it can take some time for the temperature contol
             # instrumentation to report updates to its setpoint
-
-            time.sleep(60)
+            time.sleep(5)
     except (visa.errors.VisaIOError, ConnectionResetError) as e:
         print(e)
         print("Communication issue with DECS<->VISA server")
         sys.exit(1)
+    finally:
+        print("Returning setpoing to 0K")
+        try:
+            decs_visa.query("set_MC_T:0.0")
+        except Exception as e:
+            print(f"Could not reset setpoint: {e}")
+        
     # Optional - shutdown DECS<->VISA (server and WAMP components)
     # Do this if it is not expected that the server should
     # remain open for further client connections.
-    close_server = True # False
+    close_server = True 
+    # close_server = False
     if close_server:
         print(f"Sending: {SHUTDOWN}")
         decs_visa.write(SHUTDOWN)   # can get away with a write here

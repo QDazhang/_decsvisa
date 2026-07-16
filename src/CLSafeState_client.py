@@ -63,35 +63,62 @@ def main():
 
     # Define some test queries (get_ and set_) to send to
     # the socket server
-    get_test = "get_MC_T"
-    set_test ="set_MC_T"
+    # get_test ="get_MC_T"
+    get_tank_p = "get_P1_P"
+    get_still_p = "get_P2_P"
+    get_foreline_p = "get_P3_P"
+    tank_p_mbar = 0
+    still_p_mbar = 0
+    foreline_p_mbar = 0
+    # get_fp_state = "get_FP"
+    set_valve = "set_AV05"
+    on = 1.0
+    off = 0.0
+
+    # set_test ="set_MC_T"
+    # tank_av07_state = "get_tank_av07"
     # NB - these queries should be in the
     # imported 'command_dictionary' for correct operation
 
-    # Call the queries a few times and print the response
-    repeat_n = 5
     try:
-        for i in range(repeat_n):
-            print(f"{get_test} => {decs_visa.query(get_test)}")
+        tank_p_mbar = float(decs_visa.query(get_tank_p))/100
+        still_p_mbar = float(decs_visa.query(get_still_p))/100
+        foreline_p_mbar = float(decs_visa.query(get_foreline_p))/100
+        
+        print(f"Tank Pressure = {tank_p_mbar} mBar")
+        print(f"Still Pressure => {still_p_mbar} mBar")
+        print(f"Foreline Pressure => {foreline_p_mbar} mBar")
 
-            # change set_ setpoint on each loop, setpoint unit is in K
-            # setpoint = 5 + (-1)**(i+1)
-            setpoint = 5e-3 + (i*1e-3)
-            full_set_string = f"{set_test}:{str(setpoint)}"
-
-            print(f'{full_set_string} => {decs_visa.query(full_set_string)}')
-            # NB - it can take some time for the temperature contol
-            # instrumentation to report updates to its setpoint
-
-            time.sleep(60)
+        time.sleep(5)
     except (visa.errors.VisaIOError, ConnectionResetError) as e:
         print(e)
         print("Communication issue with DECS<->VISA server")
         sys.exit(1)
+    try:
+        # fp_state = decs_visa.query(get_fp_state)
+        # print(fp_state[0])
+        # print(f"Forepump actual state => {fp_state.results[4]}")
+        # print(f"Forepump valid state => {fp_state.results[5]}")
+        # print(f"Forepump demanded state => {fp_state.results[6]}")
+        # print("Opened AV05")
+        # decs_visa.query(f"set_valve:{off}")
+        decs_visa.query("set_AV05:0.0")
+        print("command:", command)
+        print("value:", value)
+        print("uri:", cmd_uri.get(command))
+        # time.sleep(5)
+        print("Closed AV05")
+        # decs_visa.query("set_valve:off")
+    except (visa.errors.VisaIOError, ConnectionResetError) as e:
+        print(e)
+        print("Communication issue with DECS<->VISA server")
+        sys.exit(1)
+
     # Optional - shutdown DECS<->VISA (server and WAMP components)
     # Do this if it is not expected that the server should
     # remain open for further client connections.
-    close_server = True # False
+    # close_server = True
+    close_server = False
     if close_server:
         print(f"Sending: {SHUTDOWN}")
         decs_visa.write(SHUTDOWN)   # can get away with a write here
